@@ -1,0 +1,197 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poemline – How It Works</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f4f6f8;
+    color: #1a1a2e;
+    padding: 2rem;
+    line-height: 1.7;
+  }
+  .container {
+    max-width: 740px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 2.5rem;
+  }
+  h1 { font-size: 1.6rem; color: #16213e; margin-bottom: 0.3rem; }
+  .back-link { font-size: 0.85rem; margin-bottom: 2rem; display: inline-block; }
+  .back-link a { color: #0f3460; text-decoration: underline; }
+  .back-link a:hover { color: #1a4a7a; }
+  h2 { font-size: 1.15rem; color: #0f3460; margin-top: 2rem; margin-bottom: 0.6rem; border-bottom: 2px solid #e0e7ef; padding-bottom: 0.3rem; }
+  h3 { font-size: 1rem; color: #0f3460; margin-top: 1.4rem; margin-bottom: 0.4rem; }
+  p { margin-bottom: 0.8rem; font-size: 0.93rem; color: #333; }
+  a { color: #0f3460; }
+  a:hover { color: #1a4a7a; }
+  code {
+    background: #f0f4fa; padding: 0.15rem 0.4rem; border-radius: 3px;
+    font-family: 'Consolas', monospace; font-size: 0.88rem; color: #0f3460;
+  }
+  .formula {
+    background: #f8f9fb; border-left: 3px solid #0f3460;
+    padding: 0.8rem 1.2rem; margin: 1rem 0; border-radius: 0 6px 6px 0;
+    font-family: 'Consolas', monospace; font-size: 0.9rem; color: #1a1a2e;
+  }
+  .example {
+    background: #f0faf4; border-left: 3px solid #27ae60;
+    padding: 0.8rem 1.2rem; margin: 1rem 0; border-radius: 0 6px 6px 0;
+    font-size: 0.88rem;
+  }
+  .example strong { color: #27ae60; }
+  .note {
+    background: #fef9e7; border-left: 3px solid #f39c12;
+    padding: 0.8rem 1.2rem; margin: 1rem 0; border-radius: 0 6px 6px 0;
+    font-size: 0.85rem; color: #7d6608;
+  }
+  .try-it {
+    background: #eef2ff; border-left: 3px solid #0f3460;
+    padding: 0.8rem 1.2rem; margin: 1rem 0; border-radius: 0 6px 6px 0;
+    font-size: 0.88rem; color: #0f3460;
+  }
+  .try-it strong { color: #0f3460; }
+  ul { margin: 0.5rem 0 0.8rem 1.5rem; font-size: 0.93rem; }
+  li { margin-bottom: 0.3rem; }
+  .step-num {
+    display: inline-block; width: 28px; height: 28px; line-height: 28px;
+    text-align: center; background: #0f3460; color: #fff; border-radius: 50%;
+    font-size: 0.8rem; font-weight: 700; margin-right: 0.5rem; flex-shrink: 0;
+  }
+  .step { display: flex; align-items: flex-start; margin-bottom: 1rem; }
+  .step-content { flex: 1; }
+  .footer-note { margin-top: 2.5rem; font-size: 0.8rem; color: #999; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <h1>How Poemline Works</h1>
+  <p class="back-link"><a href="index.html">&larr; Back to Poemline</a></p>
+
+  <p>Poemline turns text into a geometric drawing. Every piece of text — a word, a poem, an entire novel — can be converted into a unique image made of perpendicular strokes on a canvas. Here's exactly how.</p>
+
+  <div class="try-it">
+    <strong>Want to see it in action first?</strong> Open the <a href="toy.html">interactive toy example</a> — it uses a simplified version of the maths and shows you every step of the conversion as it happens. Drag letters around, change the words, and watch the image transform. Then come back here for the full explanation.
+  </div>
+
+  <h2>The Big Idea</h2>
+  <p>Imagine a canvas where the bottom-left corner is the point <code>(0, 0)</code> and the top-right corner is <code>(1, 1)</code>. Every number between 0 and 1 corresponds to a position along an axis. If we can turn words into numbers between 0 and 1, we can plot them as coordinates and draw a path.</p>
+  <p>That's exactly what Poemline does — in three steps.</p>
+
+  <h2>Step 1: The Key — Letters Become Numbers</h2>
+
+  <p>The <strong>Key</strong> is an ordered list of symbols (by default, the 52 upper- and lowercase English letters: A, a, B, b, ... Z, z). Each symbol is assigned a value based on its position:</p>
+
+  <div class="formula">
+    symbol value = position / total number of symbols
+  </div>
+
+  <p>With 52 symbols, the first symbol (A) gets <code>0/52 = 0.0000</code>, and the last (z) gets <code>51/52 = 0.9808</code>. The values are evenly spread across the range 0 to 1.</p>
+
+  <div class="example">
+    <strong>Example with 52 symbols:</strong><br>
+    A = 0.0000, &ensp; a = 0.0192, &ensp; B = 0.0385, &ensp; ... &ensp; M = 0.4615, &ensp; ... &ensp; z = 0.9808
+  </div>
+
+  <p>You can reorder, add, or remove symbols from the Key. The values recalculate automatically — the order is what matters, not any fixed assignment.</p>
+
+  <div class="try-it">
+    <strong>Try it:</strong> In the <a href="toy.html">toy example</a>, drag a letter like <strong>t</strong> to the very top of the Key and regenerate. The word "the" will suddenly produce a completely different number — and a completely different image. The Key is your cipher.
+  </div>
+
+  <h2>Step 2: Words Become Fractions — The Weighted Sum</h2>
+
+  <p>Each piece of text (a word, a sentence, or a line — depending on the separation mode you choose) is converted into a single number between 0 and 1 using a <strong>weighted sum</strong>:</p>
+
+  <div class="formula">
+    value = letter₁ &times; 1 &ensp;+&ensp; letter₂ &times; (1/N) &ensp;+&ensp; letter₃ &times; (1/N)² &ensp;+&ensp; ... &ensp;+&ensp; letterₖ &times; (1/N)ᵏ⁻¹
+  </div>
+
+  <p>Where <code>N</code> is the total number of symbols in the Key (e.g. 52).</p>
+
+  <p>This works like a <strong>positional number system</strong> — similar to how decimal digits work, but in base N. The first letter has the most influence on the final value, the second letter refines it, the third refines it further, and so on.</p>
+
+  <div class="example">
+    <strong>Example — the word "Lorem" (N = 52):</strong><br>
+    L = 0.4231, &ensp; o = 0.5577, &ensp; r = 0.6731, &ensp; e = 0.1731, &ensp; m = 0.4808<br><br>
+    value = 0.4231 &times; 1 + 0.5577 &times; (1/52) + 0.6731 &times; (1/52)² + 0.1731 &times; (1/52)³ + 0.4808 &times; (1/52)⁴<br><br>
+    &asymp; <strong>0.4341</strong>
+  </div>
+
+  <p>The result: "Lorem" maps to roughly 0.43 — a point near the middle of the canvas.</p>
+
+  <div class="note">
+    <strong>The toy example uses a simpler method:</strong> it concatenates two-digit numbers instead of using the weighted sum (e.g. "cat" → "06 00 38" → 0.060038). This is easier to follow but produces blockier images. The main Poemline tool uses the weighted sum for smoother, more organic results.
+  </div>
+
+  <h3>Why this formula?</h3>
+  <ul>
+    <li><strong>Full range:</strong> An infinite string of the first symbol (e.g. "AAAA...") converges to exactly 0. An infinite string of the last symbol (e.g. "zzzz...") converges to exactly 1. Every possible text maps somewhere in between.</li>
+    <li><strong>Uniqueness:</strong> No two different texts produce the same number — each text has its own unique point in the 0–1 range.</li>
+    <li><strong>Smooth distribution:</strong> Words starting with similar letters land near each other, but subsequent letters spread them apart. This creates organic, flowing patterns rather than blocky grids.</li>
+  </ul>
+
+  <h2>Step 3: Numbers Become a Drawing</h2>
+
+  <p>The canvas is treated as a graph with coordinates from <code>(0, 0)</code> at the bottom-left to <code>(1, 1)</code> at the top-right. The sequence of numbers is turned into a path of <strong>perpendicular strokes</strong>:</p>
+
+  <div class="step">
+    <span class="step-num">1</span>
+    <div class="step-content">The pen starts at the left edge (<code>x = 0</code>). The <strong>first number</strong> sets the starting height (y-coordinate).</div>
+  </div>
+  <div class="step">
+    <span class="step-num">2</span>
+    <div class="step-content">The <strong>second number</strong> moves the pen <em>horizontally</em> to that x-position — this is the first visible stroke, always starting from the left edge.</div>
+  </div>
+  <div class="step">
+    <span class="step-num">3</span>
+    <div class="step-content">The <strong>third number</strong> moves the pen <em>vertically</em> to that y-position.</div>
+  </div>
+  <div class="step">
+    <span class="step-num">4</span>
+    <div class="step-content">This alternation continues — horizontal, vertical, horizontal, vertical — creating a path of perpendicular strokes across the canvas.</div>
+  </div>
+
+  <p>Each stroke corresponds to one piece of text. The result is a unique geometric fingerprint of whatever you typed in.</p>
+
+  <div class="try-it">
+    <strong>Try it:</strong> In the <a href="toy.html">toy example</a>, type "aaa bbb zzz" and generate. You'll see the strokes reach from the very bottom-left to the top-right of the canvas — the full range in action.
+  </div>
+
+  <h2>Separation Modes</h2>
+  <p>You choose how the text is split into pieces, and each piece becomes one number (one stroke):</p>
+  <ul>
+    <li><strong>Space</strong> — every word (separated by whitespace) becomes a stroke. A short poem might produce 30–50 strokes.</li>
+    <li><strong>New line</strong> — every line of text becomes a stroke. Fewer, longer strokes.</li>
+    <li><strong>Full stop</strong> — every sentence (ending at a period) becomes a stroke. The fewest, boldest strokes.</li>
+  </ul>
+  <p>The same text looks very different depending on the mode — try switching between them on the <a href="index.html">main tool</a>!</p>
+
+  <h2>The Key as a Cipher</h2>
+  <p>Reordering the Key changes the value assigned to every letter, which changes every number, which changes the entire drawing. The same text with a different Key order produces a completely different image.</p>
+  <p>Think of the Key order as a secret — if two people use the same Key, the same text will always produce the same image. Change the Key, and the image changes entirely.</p>
+
+  <h2>Can You Reverse It?</h2>
+  <p>In theory, yes — if you know the Key order and have infinite precision, you could read the exact coordinates of each stroke and decode them back to the original letters. In practice, screen resolution limits this. A 512px canvas can only distinguish positions about 0.002 apart, which is enough to recover the first letter or two of each word, but not the full text.</p>
+
+  <div class="note">
+    <strong>Fun fact:</strong> To perfectly reverse a 10-letter word with a 52-symbol key, you'd need to measure a position to within 1/52¹⁰ of the canvas width — that's about 0.000000000000000007 of a pixel. You'd need a canvas the size of a galaxy, or strokes thinner than an atom. The maths works; the physics doesn't quite cooperate.
+  </div>
+
+  <h2>Summary</h2>
+  <p>Poemline is a simple chain: <strong>letters → numbers → coordinates → drawing</strong>. Every text that has ever been written, or ever will be, has a unique geometric representation waiting to be drawn. The conversion is deterministic, reversible in theory, and produces surprisingly beautiful patterns from ordinary words.</p>
+
+  <p class="footer-note">Built for curiosity. <a href="toy.html">Play with the toy example</a> or <a href="index.html" style="color:#0f3460;">go back and try the full tool.</a></p>
+
+</div>
+
+</body>
+</html>

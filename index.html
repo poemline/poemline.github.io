@@ -1,0 +1,488 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poemline – Text to Image</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f4f6f8;
+    color: #1a1a2e;
+    padding: 2rem;
+  }
+  h1 {
+    text-align: center;
+    margin-bottom: 0.3rem;
+    font-size: 1.6rem;
+    color: #16213e;
+  }
+  .intro {
+    max-width: 680px;
+    margin: 0 auto 1.8rem;
+    text-align: center;
+    font-size: 0.92rem;
+    color: #444;
+    line-height: 1.6;
+  }
+  .intro p { margin-bottom: 0.5rem; }
+  .intro .invite {
+    font-weight: 600;
+    color: #0f3460;
+    font-size: 0.95rem;
+  }
+  .intro .footnote {
+    font-size: 0.75rem;
+    color: #999;
+    margin-top: 0.3rem;
+  }
+  .intro a { color: #0f3460; text-decoration: underline; }
+  .intro a:hover { color: #1a4a7a; }
+  .layout {
+    display: flex;
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    align-items: flex-start;
+  }
+  .section {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 1.5rem;
+  }
+  .section h2 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: #0f3460;
+    border-bottom: 2px solid #e0e7ef;
+    padding-bottom: 0.4rem;
+  }
+  #key-section { flex: 0 0 260px; }
+  .key-scroll { max-height: 520px; overflow-y: auto; }
+  #key-list { list-style: none; padding: 0; }
+  #key-list li {
+    display: flex; align-items: center; gap: 0.4rem;
+    padding: 0.25rem 0.4rem; border-bottom: 1px solid #e8ecf1;
+    font-size: 0.85rem; cursor: grab; background: #fff; transition: background 0.15s;
+  }
+  #key-list li:hover { background: #f0f4fa; }
+  #key-list li.dragging { opacity: 0.4; background: #e8eef6; }
+  #key-list li.drag-over { border-top: 2px solid #0f3460; }
+  .key-index {
+    display: inline-block; width: 28px; text-align: center;
+    font-size: 0.75rem; color: #888; font-family: 'Consolas', monospace; flex-shrink: 0;
+  }
+  .key-value {
+    display: inline-block; width: 44px; text-align: center;
+    font-size: 0.7rem; color: #27ae60; font-family: 'Consolas', monospace; flex-shrink: 0;
+  }
+  .key-symbol {
+    font-weight: 600; color: #0f3460; font-size: 0.95rem; flex: 1; text-align: center;
+  }
+  .btn-remove-sym {
+    background: none; border: none; color: #ccc; cursor: pointer;
+    font-size: 0.85rem; padding: 0 0.3rem; flex-shrink: 0;
+  }
+  .btn-remove-sym:hover { color: #e74c3c; }
+  .key-controls { display: flex; gap: 0.5rem; margin-top: 0.8rem; align-items: center; }
+  .key-add-input {
+    width: 40px; text-align: center; border: 1px solid #c5cdd8;
+    border-radius: 4px; padding: 0.3rem; font-size: 0.9rem; background: #fafbfc;
+  }
+  .key-add-input:focus { outline: none; border-color: #0f3460; }
+  .btn {
+    display: inline-block; padding: 0.4rem 0.8rem; font-size: 0.8rem;
+    border: none; border-radius: 5px; cursor: pointer;
+  }
+  .btn-add { background: #0f3460; color: #fff; }
+  .btn-add:hover { background: #1a4a7a; }
+  .key-info { font-size: 0.72rem; color: #888; margin-top: 0.5rem; line-height: 1.4; }
+  #text-section { flex: 1; }
+  #text-section textarea {
+    width: 100%; min-height: 180px; border: 1px solid #c5cdd8; border-radius: 6px;
+    padding: 0.7rem; font-size: 0.95rem; font-family: inherit; resize: vertical; background: #fafbfc;
+  }
+  #text-section textarea:focus { outline: none; border-color: #0f3460; background: #fff; }
+  .sub-header { font-size: 0.85rem; font-weight: 600; color: #0f3460; margin-top: 1rem; margin-bottom: 0.5rem; }
+  .sep-group { display: flex; gap: 0.5rem; }
+  .btn-sep {
+    padding: 0.45rem 1.1rem; font-size: 0.85rem; border: 2px solid #0f3460;
+    border-radius: 5px; background: #fff; color: #0f3460; cursor: pointer; font-weight: 600;
+  }
+  .btn-sep.active { background: #0f3460; color: #fff; }
+  .btn-sep:hover:not(.active) { background: #e8eef6; }
+  .colour-row { display: flex; align-items: center; gap: 0.6rem; margin-top: 1rem; }
+  .colour-row label { font-size: 0.85rem; font-weight: 600; color: #0f3460; }
+  #line-colour { width: 36px; height: 30px; border: 1px solid #c5cdd8; border-radius: 4px; cursor: pointer; padding: 0; }
+  .size-input {
+    width: 80px; text-align: center; border: 1px solid #c5cdd8;
+    border-radius: 4px; padding: 0.4rem; font-size: 0.95rem; background: #fafbfc;
+  }
+  .size-input:focus { outline: none; border-color: #0f3460; background: #fff; }
+  .size-hint { font-size: 0.75rem; color: #888; margin-left: 0.5rem; }
+  .btn-generate {
+    display: block; margin-top: 1rem; width: 100%; padding: 0.6rem;
+    font-size: 1rem; font-weight: 600; border: none; border-radius: 6px;
+    background: #27ae60; color: #fff; cursor: pointer;
+  }
+  .btn-generate:hover { background: #219a52; }
+  .examples-row { margin-top: 0.8rem; }
+  .examples-row .sub-header { margin-bottom: 0.4rem; }
+  .example-btns { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .btn-example {
+    padding: 0.3rem 0.7rem; font-size: 0.75rem; border: 1px solid #c5cdd8;
+    border-radius: 4px; background: #fafbfc; color: #333; cursor: pointer;
+  }
+  .btn-example:hover { background: #e8eef6; border-color: #0f3460; }
+  #image-section { flex: 1; }
+  .canvas-wrapper {
+    display: flex; justify-content: center; align-items: center;
+    margin-bottom: 0.5rem; min-height: 200px;
+  }
+  #output-canvas { border: 2px solid #e0e7ef; border-radius: 4px; max-width: 100%; }
+  .placeholder-text { color: #999; font-style: italic; text-align: center; padding: 3rem 0; }
+  .save-note { font-size: 0.85rem; color: #888; text-align: center; display: none; }
+  #debug-output { margin-top: 0.8rem; font-size: 0.85rem; color: #555; text-align: center; display: none; }
+  .btn-getdata {
+    display: block; margin: 0.8rem auto 0; padding: 0.45rem 1.2rem;
+    font-size: 0.85rem; font-weight: 600; border: 2px solid #0f3460;
+    border-radius: 5px; background: #fff; color: #0f3460; cursor: pointer;
+  }
+  .btn-getdata:hover { background: #e8eef6; }
+  .error-banner {
+    margin-top: 0.8rem; padding: 0.6rem 0.8rem; background: #fef2f2;
+    border: 1px solid #e74c3c; border-radius: 6px; font-size: 0.85rem; color: #c0392b; display: none;
+  }
+</style>
+</head>
+<body>
+
+<h1>Poemline</h1>
+
+<div class="intro">
+  <p>Text can be converted to numbers. Numbers can be drawn on a graph. This is a whimsical method of turning any text — past, present, or future — into a painting, one stroke per word.</p>
+  <p>The conversion is unique: no two texts will produce the same image. And each image could, in theory, be decoded back to the original text.*</p>
+  <p class="invite">Paste your favourite song, a poem, or anything you like — and see what it looks like on canvas.</p>
+  <p class="footnote">* Subject to resolution constraints. For longer words you'd need atom-level precision to reverse it — but the maths checks out.<br>Curious how it works? <a href="how-it-works.html">See what's happening under the hood.</a></p>
+</div>
+
+<div class="layout">
+
+  <!-- KEY SECTION -->
+  <div class="section" id="key-section">
+    <h2>Key</h2>
+    <div class="key-scroll">
+      <ul id="key-list"></ul>
+    </div>
+    <div class="key-controls">
+      <input type="text" id="add-symbol-input" class="key-add-input" maxlength="3" placeholder="...">
+      <button class="btn btn-add" onclick="addSymbol()">+ Add</button>
+    </div>
+    <p class="key-info">Drag to reorder. Values auto-calculated as i/N based on position.</p>
+    <div class="error-banner" id="key-error"></div>
+  </div>
+
+  <!-- TEXT INPUT SECTION -->
+  <div class="section" id="text-section">
+    <h2>Text Input</h2>
+    <label for="text-input" style="font-size:0.9rem;color:#333;">Input your text here</label>
+    <textarea id="text-input" placeholder="Type or paste your text here...">Lorem ipsum dolor sit amet,
+consectetur adipiscing elit. Sed do eiusmod
+tempor incididunt ut labore et dolore magna aliqua.
+Ut enim ad minim veniam, quis nostrud
+exercitation ullamco laboris. Nisi ut aliquip
+ex ea commodo consequat. Duis aute irure dolor
+in reprehenderit in voluptate velit esse.
+Cillum dolore eu fugiat nulla pariatur. Excepteur
+sint occaecat cupidatat non proident.
+Sunt in culpa qui officia deserunt
+mollit anim id est laborum. Vestibulum ante ipsum
+primis in faucibus orci luctus et ultrices.
+Praesent commodo cursus magna vel
+scelerisque nisl consectetur.</textarea>
+
+    <div class="examples-row">
+      <div class="sub-header">Quick examples</div>
+      <div class="example-btns">
+        <button class="btn-example" onclick="loadExample('lorem')">Lorem Ipsum</button>
+        <button class="btn-example" onclick="loadExample('jabberwocky')">Jabberwocky</button>
+        <button class="btn-example" onclick="loadExample('hamlet')">Hamlet's Soliloquy</button>
+        <button class="btn-example" onclick="loadExample('raven')">The Raven</button>
+        <button class="btn-example" onclick="loadExample('hope')">Hope (Dickinson)</button>
+      </div>
+    </div>
+
+    <div class="sub-header">One stroke per</div>
+    <div class="sep-group">
+      <button class="btn-sep active" data-method="word" onclick="selectMethod(this)">Space</button>
+      <button class="btn-sep" data-method="line" onclick="selectMethod(this)">New line</button>
+      <button class="btn-sep" data-method="sentence" onclick="selectMethod(this)">Full stop</button>
+    </div>
+
+    <div class="colour-row">
+      <label for="line-colour">Stroke colour</label>
+      <input type="color" id="line-colour" value="#000000">
+    </div>
+
+    <div class="sub-header">Image size</div>
+    <div style="display:flex;align-items:center;">
+      <input type="number" id="image-size" class="size-input" value="512" min="1" max="1024" oninput="onSizeChange()">
+      <span class="size-hint">px (max 1024)</span>
+    </div>
+
+    <button class="btn-generate" onclick="generate()">Generate</button>
+  </div>
+
+  <!-- IMAGE OUTPUT SECTION -->
+  <div class="section" id="image-section">
+    <h2>Image Output</h2>
+    <div class="canvas-wrapper" id="canvas-wrapper">
+      <p class="placeholder-text" id="canvas-placeholder">Click "Generate" to create your image</p>
+      <canvas id="output-canvas" style="display:none;"></canvas>
+    </div>
+    <p class="save-note" id="save-note">Right-click image to save</p>
+    <p id="debug-output"></p>
+    <button class="btn-getdata" id="btn-getdata" style="display:none;" onclick="exportData()">Get data</button>
+  </div>
+
+</div>
+
+<script>
+  var defaultSymbols = [
+    'A','a','B','b','C','c','D','d','E','e',
+    'F','f','G','g','H','h','I','i','J','j',
+    'K','k','L','l','M','m','N','n','O','o',
+    'P','p','Q','q','R','r','S','s','T','t',
+    'U','u','V','v','W','w','X','x','Y','y',
+    'Z','z'
+  ];
+
+  var examples = {
+    lorem: "Lorem ipsum dolor sit amet,\nconsectetur adipiscing elit. Sed do eiusmod\ntempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud\nexercitation ullamco laboris. Nisi ut aliquip\nex ea commodo consequat. Duis aute irure dolor\nin reprehenderit in voluptate velit esse.\nCillum dolore eu fugiat nulla pariatur. Excepteur\nsint occaecat cupidatat non proident.\nSunt in culpa qui officia deserunt\nmollit anim id est laborum. Vestibulum ante ipsum\nprimis in faucibus orci luctus et ultrices.\nPraesent commodo cursus magna vel\nscelerisque nisl consectetur.",
+
+    jabberwocky: "'Twas brillig, and the slithy toves\nDid gyre and gimble in the wabe:\nAll mimsy were the borogoves,\nAnd the mome raths outgrabe.\n\n\"Beware the Jabberwock, my son!\nThe jaws that bite, the claws that catch!\nBeware the Jubjub bird, and shun\nThe frumious Bandersnatch!\"\n\nHe took his vorpal sword in hand;\nLong time the manxome foe he sought—\nSo rested he by the Tumtum tree\nAnd stood awhile in thought.\n\nAnd, as in uffish thought he stood,\nThe Jabberwock, with eyes of flame,\nCame whiffling through the tulgey wood,\nAnd burbled as it came!\n\nOne, two! One, two! And through and through\nThe vorpal blade went snicker-snack!\nHe left it dead, and with its head\nHe went galumphing back.\n\n\"And hast thou slain the Jabberwock?\nCome to my arms, my beamish boy!\nO frabjous day! Callooh! Callay!\"\nHe chortled in his joy.\n\n'Twas brillig, and the slithy toves\nDid gyre and gimble in the wabe:\nAll mimsy were the borogoves,\nAnd the mome raths outgrabe.",
+
+    hamlet: "To be, or not to be, that is the question:\nWhether 'tis nobler in the mind to suffer\nThe slings and arrows of outrageous fortune,\nOr to take arms against a sea of troubles,\nAnd by opposing end them. To die: to sleep;\nNo more; and by a sleep to say we end\nThe heart-ache and the thousand natural shocks\nThat flesh is heir to, 'tis a consummation\nDevoutly to be wish'd. To die, to sleep;\nTo sleep: perchance to dream: ay, there's the rub;\nFor in that sleep of death what dreams may come\nWhen we have shuffled off this mortal coil,\nMust give us pause: there's the respect\nThat makes calamity of so long life;\nFor who would bear the whips and scorns of time,\nThe oppressor's wrong, the proud man's contumely,\nThe pangs of despised love, the law's delay,\nThe insolence of office and the spurns\nThat patient merit of the unworthy takes,\nWhen he himself might his quietus make\nWith a bare bodkin? who would fardels bear,\nTo grunt and sweat under a weary life,\nBut that the dread of something after death,\nThe undiscover'd country from whose bourn\nNo traveller returns, puzzles the will\nAnd makes us rather bear those ills we have\nThan fly to others that we know not of?\nThus conscience does make cowards of us all;\nAnd thus the native hue of resolution\nIs sicklied o'er with the pale cast of thought,\nAnd enterprises of great pith and moment\nWith this regard their currents turn awry,\nAnd lose the name of action.",
+
+    raven: "Once upon a midnight dreary, while I pondered, weak and weary,\nOver many a quaint and curious volume of forgotten lore—\nWhile I nodded, nearly napping, suddenly there came a tapping,\nAs of some one gently rapping, rapping at my chamber door.\n\"'Tis some visitor,\" I muttered, \"tapping at my chamber door—\nOnly this and nothing more.\"\n\nAh, distinctly I remember it was in the bleak December;\nAnd each separate dying ember wrought its ghost upon the floor.\nEagerly I wished the morrow;—vainly I had sought to borrow\nFrom my books surcease of sorrow—sorrow for the lost Lenore—\nFor the rare and radiant maiden whom the angels name Lenore—\nNameless here for evermore.\n\nDeep into that darkness peering, long I stood there wondering, fearing,\nDoubting, dreaming dreams no mortal ever dared to dream before;\nBut the silence was unbroken, and the stillness gave no token,\nAnd the only word there spoken was the whispered word, \"Lenore?\"\nThis I whispered, and an echo murmured back the word, \"Lenore!\"—\nMerely this and nothing more.\n\nThen this ebony bird beguiling my sad fancy into smiling,\nBy the grave and stern decorum of the countenance it wore,\n\"Though thy crest be shorn and shaven, thou,\" I said, \"art sure no craven,\nGhastly grim and ancient Raven wandering from the Nightly shore—\nTell me what thy lordly name is on the Night's Plutonian shore!\"\nQuoth the Raven \"Nevermore.\"",
+
+    hope: "\"Hope\" is the thing with feathers —\nThat perches in the soul —\nAnd sings the tune without the words —\nAnd never stops — at all —\n\nAnd sweetest — in the Gale — is heard —\nAnd sore must be the storm —\nThat could abash the little Bird\nThat kept so many warm —\n\nI've heard it in the chillest land —\nAnd on the strangest Sea —\nYet — never — in Extremity,\nIt asked a crumb — of me."
+  };
+
+  var separationMethod = 'word';
+  var imageGenerated = false;
+  var lastFractions = null;
+  var lastChunkData = null;
+  var dragSrcEl = null;
+
+  function loadExample(key) {
+    document.getElementById('text-input').value = examples[key];
+  }
+
+  function refreshList() {
+    var items = document.querySelectorAll('#key-list li');
+    var N = items.length;
+    items.forEach(function(li, i) {
+      li.querySelector('.key-index').textContent = (i + 1) + '.';
+      var val = N > 0 ? (i / N) : 0;
+      li.querySelector('.key-value').textContent = val.toFixed(4);
+    });
+  }
+
+  function buildListItem(symbol) {
+    var li = document.createElement('li');
+    li.draggable = true;
+    li.setAttribute('data-symbol', symbol);
+    var idx = document.createElement('span');
+    idx.className = 'key-index';
+    li.appendChild(idx);
+    var sym = document.createElement('span');
+    sym.className = 'key-symbol';
+    sym.textContent = symbol;
+    li.appendChild(sym);
+    var val = document.createElement('span');
+    val.className = 'key-value';
+    li.appendChild(val);
+    var removeBtn = document.createElement('button');
+    removeBtn.className = 'btn-remove-sym';
+    removeBtn.textContent = '\u2715';
+    removeBtn.title = 'Remove';
+    removeBtn.addEventListener('click', function() { li.remove(); refreshList(); });
+    li.appendChild(removeBtn);
+    li.addEventListener('dragstart', function(e) {
+      dragSrcEl = this; this.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move';
+    });
+    li.addEventListener('dragend', function() {
+      this.classList.remove('dragging');
+      document.querySelectorAll('#key-list li').forEach(function(item) { item.classList.remove('drag-over'); });
+    });
+    li.addEventListener('dragover', function(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; this.classList.add('drag-over'); });
+    li.addEventListener('dragleave', function() { this.classList.remove('drag-over'); });
+    li.addEventListener('drop', function(e) {
+      e.preventDefault(); this.classList.remove('drag-over');
+      if (dragSrcEl !== this) {
+        var list = document.getElementById('key-list');
+        var allItems = Array.from(list.children);
+        var fromIdx = allItems.indexOf(dragSrcEl);
+        var toIdx = allItems.indexOf(this);
+        if (fromIdx < toIdx) { list.insertBefore(dragSrcEl, this.nextSibling); }
+        else { list.insertBefore(dragSrcEl, this); }
+        refreshList();
+      }
+    });
+    return li;
+  }
+
+  function init() {
+    var list = document.getElementById('key-list');
+    defaultSymbols.forEach(function(sym) { list.appendChild(buildListItem(sym)); });
+    refreshList();
+  }
+
+  function addSymbol() {
+    var input = document.getElementById('add-symbol-input');
+    var sym = input.value;
+    if (!sym) return;
+    var existing = document.querySelectorAll('#key-list li');
+    for (var i = 0; i < existing.length; i++) {
+      if (existing[i].getAttribute('data-symbol') === sym) { alert('Symbol "' + sym + '" already exists.'); return; }
+    }
+    var list = document.getElementById('key-list');
+    list.appendChild(buildListItem(sym));
+    refreshList(); input.value = '';
+    var scroll = document.querySelector('.key-scroll');
+    if (scroll) scroll.scrollTop = scroll.scrollHeight;
+  }
+
+  document.getElementById('add-symbol-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') addSymbol(); });
+
+  function selectMethod(btn) {
+    document.querySelectorAll('.btn-sep').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    separationMethod = btn.getAttribute('data-method');
+  }
+
+  function getImageSize() {
+    var val = parseInt(document.getElementById('image-size').value, 10);
+    if (isNaN(val) || val < 1) val = 1; if (val > 1024) val = 1024; return val;
+  }
+
+  function getLineColour() { return document.getElementById('line-colour').value; }
+
+  function buildKeyMap() {
+    var map = {}, items = document.querySelectorAll('#key-list li');
+    var N = items.length, errors = [], symbolsSeen = {};
+    items.forEach(function(li, i) {
+      var sym = li.getAttribute('data-symbol');
+      if (symbolsSeen[sym]) { errors.push('Duplicate symbol: "' + sym + '"'); }
+      else { symbolsSeen[sym] = true; }
+      map[sym] = i / N;
+    });
+    return { map: map, N: N, errors: errors };
+  }
+
+  function chunkToValue(chunk, keyMap, N) {
+    var value = 0, weight = 1, invN = 1 / N, hasAny = false;
+    for (var i = 0; i < chunk.length; i++) {
+      var ch = chunk[i];
+      if (keyMap.hasOwnProperty(ch)) { value += keyMap[ch] * weight; weight *= invN; hasAny = true; }
+    }
+    return hasAny ? value : null;
+  }
+
+  function splitText(text, method) {
+    var chunks = [];
+    if (method === 'word') { chunks = text.split(/\s+/); }
+    else if (method === 'sentence') {
+      var parts = text.split('.');
+      for (var i = 0; i < parts.length; i++) {
+        var segment = parts[i]; if (i < parts.length - 1) segment += '.';
+        segment = segment.trim(); if (segment.length > 0) chunks.push(segment);
+      }
+    } else if (method === 'line') { chunks = text.split(/\n/); }
+    return chunks.filter(function(c) { return c.trim().length > 0; });
+  }
+
+  function graphToCanvas(x, y, size) { return { px: x * size, py: (1 - y) * size }; }
+
+  function drawCanvas(size, fractions, colour) {
+    var canvas = document.getElementById('output-canvas');
+    var ctx = canvas.getContext('2d');
+    canvas.width = size; canvas.height = size;
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, size, size);
+    if (fractions && fractions.length >= 2) {
+      ctx.beginPath(); ctx.strokeStyle = colour; ctx.lineWidth = 1;
+      var curX = 0, curY = fractions[0];
+      var start = graphToCanvas(curX, curY, size);
+      ctx.moveTo(start.px, start.py);
+      for (var i = 1; i < fractions.length; i++) {
+        if (i % 2 === 1) { curX = fractions[i]; } else { curY = fractions[i]; }
+        var pt = graphToCanvas(curX, curY, size); ctx.lineTo(pt.px, pt.py);
+      }
+      ctx.stroke();
+    }
+    canvas.style.display = 'block';
+    document.getElementById('canvas-placeholder').style.display = 'none';
+    document.getElementById('save-note').style.display = 'block';
+  }
+
+  function onSizeChange() {
+    if (!imageGenerated || !lastFractions) return;
+    drawCanvas(getImageSize(), lastFractions, getLineColour());
+  }
+
+  document.getElementById('line-colour').addEventListener('input', function() {
+    if (!imageGenerated || !lastFractions) return;
+    drawCanvas(getImageSize(), lastFractions, getLineColour());
+  });
+
+  function generate() {
+    var text = document.getElementById('text-input').value;
+    if (!text.trim()) { alert('Please enter some text first.'); return; }
+    var result = buildKeyMap();
+    var keyError = document.getElementById('key-error');
+    if (result.errors.length > 0) {
+      keyError.innerHTML = '<strong>Key errors:</strong><br>' + result.errors.join('<br>');
+      keyError.style.display = 'block';
+      document.getElementById('debug-output').style.display = 'none';
+      document.getElementById('btn-getdata').style.display = 'none'; return;
+    }
+    keyError.style.display = 'none';
+    var size = getImageSize(); document.getElementById('image-size').value = size;
+    var keyMap = result.map, N = result.N, colour = getLineColour();
+    var chunks = splitText(text, separationMethod);
+    var fractions = [], chunkData = [];
+    for (var i = 0; i < chunks.length; i++) {
+      var val = chunkToValue(chunks[i], keyMap, N);
+      if (val !== null) { fractions.push(val); chunkData.push({ snippet: chunks[i], value: val }); }
+    }
+    lastFractions = fractions; lastChunkData = chunkData;
+    drawCanvas(size, fractions, colour); imageGenerated = true;
+    var strokeCount = fractions.length >= 2 ? fractions.length - 1 : 0;
+    var debugEl = document.getElementById('debug-output');
+    debugEl.textContent = 'Strokes: ' + strokeCount + ' (from ' + fractions.length + ' segments)';
+    debugEl.style.display = 'block';
+    document.getElementById('btn-getdata').style.display = 'block';
+  }
+
+  function exportData() {
+    if (!lastChunkData || lastChunkData.length === 0) return;
+    var lines = ['Snippet\tValue'];
+    for (var i = 0; i < lastChunkData.length; i++) {
+      var snippet = lastChunkData[i].snippet.replace(/\t/g, ' ').replace(/\n/g, ' ');
+      lines.push(snippet + '\t' + lastChunkData[i].value);
+    }
+    var blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a'); a.href = url; a.download = 'poemline-data.txt';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  }
+
+  init();
+</script>
+
+</body>
+</html>

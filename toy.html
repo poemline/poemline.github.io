@@ -1,0 +1,321 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poemline – Toy Example</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f4f6f8;
+    color: #1a1a2e;
+    padding: 2rem;
+    line-height: 1.7;
+  }
+  .container { max-width: 900px; margin: 0 auto; }
+  h1 { text-align: center; font-size: 1.6rem; color: #16213e; margin-bottom: 0.3rem; }
+  .back-link { font-size: 0.85rem; text-align: center; margin-bottom: 1.5rem; display: block; }
+  .back-link a { color: #0f3460; text-decoration: underline; }
+  .back-link a:hover { color: #1a4a7a; }
+  .intro-text {
+    max-width: 680px; margin: 0 auto 1.5rem; text-align: center;
+    font-size: 0.92rem; color: #444; line-height: 1.6;
+  }
+  .intro-text p { margin-bottom: 0.5rem; }
+  .intro-text strong { color: #0f3460; }
+  .layout { display: flex; gap: 2rem; align-items: flex-start; }
+  .section {
+    background: #fff; border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 1.5rem;
+  }
+  .section h2 {
+    font-size: 1.1rem; margin-bottom: 1rem; color: #0f3460;
+    border-bottom: 2px solid #e0e7ef; padding-bottom: 0.4rem;
+  }
+  #key-section { flex: 0 0 220px; }
+  .key-scroll { max-height: 420px; overflow-y: auto; }
+  #key-list { list-style: none; padding: 0; }
+  #key-list li {
+    display: flex; align-items: center; gap: 0.4rem;
+    padding: 0.25rem 0.4rem; border-bottom: 1px solid #e8ecf1;
+    font-size: 0.85rem; cursor: grab; background: #fff; transition: background 0.15s;
+  }
+  #key-list li:hover { background: #f0f4fa; }
+  #key-list li.dragging { opacity: 0.4; }
+  #key-list li.drag-over { border-top: 2px solid #0f3460; }
+  .key-index {
+    display: inline-block; width: 24px; text-align: center;
+    font-size: 0.75rem; color: #888; font-family: 'Consolas', monospace;
+  }
+  .key-num {
+    display: inline-block; width: 28px; text-align: center;
+    font-size: 0.78rem; color: #27ae60; font-family: 'Consolas', monospace; font-weight: 700;
+  }
+  .key-symbol {
+    font-weight: 600; color: #0f3460; font-size: 0.95rem; flex: 1; text-align: center;
+  }
+  .key-info { font-size: 0.72rem; color: #888; margin-top: 0.6rem; line-height: 1.4; }
+  #text-section { flex: 1; }
+  #text-section textarea {
+    width: 100%; min-height: 100px; border: 1px solid #c5cdd8; border-radius: 6px;
+    padding: 0.7rem; font-size: 0.95rem; font-family: inherit; resize: vertical; background: #fafbfc;
+  }
+  #text-section textarea:focus { outline: none; border-color: #0f3460; background: #fff; }
+  .btn-generate {
+    display: block; margin-top: 1rem; width: 100%; padding: 0.6rem;
+    font-size: 1rem; font-weight: 600; border: none; border-radius: 6px;
+    background: #27ae60; color: #fff; cursor: pointer;
+  }
+  .btn-generate:hover { background: #219a52; }
+  #steps-output {
+    margin-top: 1rem; padding: 1rem; background: #f8f9fb;
+    border-radius: 6px; border: 1px solid #e0e7ef; display: none;
+  }
+  #steps-output h3 { font-size: 0.95rem; color: #0f3460; margin-bottom: 0.6rem; }
+  .step-row {
+    font-size: 0.85rem; margin-bottom: 0.4rem; font-family: 'Consolas', monospace;
+    padding: 0.3rem 0.5rem; border-radius: 4px;
+  }
+  .step-row:nth-child(odd) { background: #f0f4fa; }
+  .step-word { color: #0f3460; font-weight: 700; }
+  .step-arrow { color: #888; }
+  .step-digits { color: #27ae60; font-weight: 700; }
+  .step-fraction { color: #e74c3c; font-weight: 700; }
+  #image-section { flex: 1; }
+  .canvas-wrapper {
+    display: flex; justify-content: center; align-items: center;
+    margin-bottom: 0.5rem; min-height: 200px;
+  }
+  #output-canvas { border: 2px solid #e0e7ef; border-radius: 4px; max-width: 100%; }
+  .placeholder-text { color: #999; font-style: italic; text-align: center; padding: 3rem 0; }
+  .save-note { font-size: 0.85rem; color: #888; text-align: center; display: none; }
+  .try-prompts {
+    max-width: 680px; margin: 1.5rem auto 0; text-align: center;
+    font-size: 0.85rem; color: #666; line-height: 1.6;
+  }
+  .try-prompts strong { color: #0f3460; }
+  .try-prompts a { color: #0f3460; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <h1>Poemline — Toy Example</h1>
+  <p class="back-link"><a href="how-it-works.html">&larr; Back to How It Works</a> &ensp;|&ensp; <a href="index.html">Main tool &rarr;</a></p>
+
+  <div class="intro-text">
+    <p>This is a <strong>simplified version</strong> to help you see exactly what's happening at each step. Each letter maps to a simple two-digit number (00–99), and the numbers are concatenated with <code>0.</code> in front to make a fraction.</p>
+    <p>Type a few short words, hit Generate, and watch the conversion unfold step by step. <strong>Try dragging letters in the Key to see how the image changes!</strong></p>
+  </div>
+
+  <div class="layout">
+
+    <div class="section" id="key-section">
+      <h2>Key</h2>
+      <div class="key-scroll">
+        <ul id="key-list"></ul>
+      </div>
+      <p class="key-info">Drag letters to reorder — numbers recalculate and the image changes completely. This is your cipher!</p>
+    </div>
+
+    <div class="section" id="text-section">
+      <h2>Text Input</h2>
+      <textarea id="text-input" placeholder="Type a few words...">the cat sat</textarea>
+      <button class="btn-generate" onclick="generate()">Generate</button>
+      <div id="steps-output">
+        <h3>Step-by-step breakdown</h3>
+        <div id="steps-list"></div>
+      </div>
+    </div>
+
+    <div class="section" id="image-section">
+      <h2>Image Output</h2>
+      <div class="canvas-wrapper" id="canvas-wrapper">
+        <p class="placeholder-text" id="canvas-placeholder">Click "Generate" to see the result</p>
+        <canvas id="output-canvas" width="300" height="300" style="display:none;"></canvas>
+      </div>
+      <p class="save-note" id="save-note">Right-click image to save</p>
+    </div>
+
+  </div>
+
+  <div class="try-prompts">
+    <strong>Things to try:</strong> Change "the cat sat" to "the cat sat on the mat" — see how extra words add strokes. Drag <strong>t</strong> to the top of the Key and regenerate — the whole image shifts. Try "aaa bbb zzz" to see the extremes. When you're ready for the full tool, <a href="index.html">head to Poemline</a>.
+  </div>
+
+</div>
+
+<script>
+  var defaultSymbols = [
+    'A','a','B','b','C','c','D','d','E','e',
+    'F','f','G','g','H','h','I','i','J','j',
+    'K','k','L','l','M','m','N','n','O','o',
+    'P','p','Q','q','R','r','S','s','T','t',
+    'U','u','V','v','W','w','X','x','Y','y',
+    'Z','z'
+  ];
+
+  var dragSrcEl = null;
+
+  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+
+  function refreshList() {
+    var items = document.querySelectorAll('#key-list li');
+    var N = items.length;
+    items.forEach(function(li, i) {
+      li.querySelector('.key-index').textContent = (i + 1) + '.';
+      var val = N > 1 ? Math.round(i * 99 / (N - 1)) : 0;
+      li.querySelector('.key-num').textContent = pad2(val);
+    });
+  }
+
+  function buildListItem(symbol) {
+    var li = document.createElement('li');
+    li.draggable = true;
+    li.setAttribute('data-symbol', symbol);
+    var idx = document.createElement('span');
+    idx.className = 'key-index';
+    li.appendChild(idx);
+    var sym = document.createElement('span');
+    sym.className = 'key-symbol';
+    sym.textContent = symbol;
+    li.appendChild(sym);
+    var num = document.createElement('span');
+    num.className = 'key-num';
+    li.appendChild(num);
+    li.addEventListener('dragstart', function(e) {
+      dragSrcEl = this; this.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move';
+    });
+    li.addEventListener('dragend', function() {
+      this.classList.remove('dragging');
+      document.querySelectorAll('#key-list li').forEach(function(item) { item.classList.remove('drag-over'); });
+    });
+    li.addEventListener('dragover', function(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; this.classList.add('drag-over'); });
+    li.addEventListener('dragleave', function() { this.classList.remove('drag-over'); });
+    li.addEventListener('drop', function(e) {
+      e.preventDefault(); this.classList.remove('drag-over');
+      if (dragSrcEl !== this) {
+        var list = document.getElementById('key-list');
+        var allItems = Array.from(list.children);
+        var fromIdx = allItems.indexOf(dragSrcEl);
+        var toIdx = allItems.indexOf(this);
+        if (fromIdx < toIdx) { list.insertBefore(dragSrcEl, this.nextSibling); }
+        else { list.insertBefore(dragSrcEl, this); }
+        refreshList();
+      }
+    });
+    return li;
+  }
+
+  function init() {
+    var list = document.getElementById('key-list');
+    defaultSymbols.forEach(function(sym) { list.appendChild(buildListItem(sym)); });
+    refreshList();
+  }
+
+  function buildKeyMap() {
+    var map = {};
+    var items = document.querySelectorAll('#key-list li');
+    var N = items.length;
+    items.forEach(function(li, i) {
+      var sym = li.getAttribute('data-symbol');
+      var val = N > 1 ? Math.round(i * 99 / (N - 1)) : 0;
+      map[sym] = pad2(val);
+    });
+    return map;
+  }
+
+  function graphToCanvas(x, y, size) {
+    return { px: x * size, py: (1 - y) * size };
+  }
+
+  function generate() {
+    var text = document.getElementById('text-input').value;
+    if (!text.trim()) { alert('Please enter some text.'); return; }
+
+    var keyMap = buildKeyMap();
+    var words = text.split(/\s+/).filter(function(w) { return w.length > 0; });
+
+    var stepsEl = document.getElementById('steps-list');
+    stepsEl.innerHTML = '';
+    var fractions = [];
+    var maxShow = 10;
+
+    for (var w = 0; w < words.length; w++) {
+      var word = words[w];
+      var digits = '';
+      var letterParts = [];
+      for (var c = 0; c < word.length; c++) {
+        if (keyMap.hasOwnProperty(word[c])) {
+          digits += keyMap[word[c]];
+          letterParts.push(word[c] + '=' + keyMap[word[c]]);
+        }
+      }
+      if (digits.length === 0) continue;
+      var fractionStr = '0.' + digits;
+      var fractionVal = parseFloat(fractionStr);
+      fractions.push(fractionVal);
+
+      if (w < maxShow) {
+        var row = document.createElement('div');
+        row.className = 'step-row';
+        row.innerHTML =
+          '<span class="step-word">"' + word + '"</span> ' +
+          '<span class="step-arrow">&rarr;</span> ' +
+          letterParts.join(' ') +
+          ' <span class="step-arrow">&rarr;</span> ' +
+          '<span class="step-digits">' + digits + '</span>' +
+          ' <span class="step-arrow">&rarr;</span> ' +
+          '<span class="step-fraction">' + fractionStr + '</span>';
+        stepsEl.appendChild(row);
+      }
+    }
+
+    if (fractions.length > maxShow) {
+      var moreRow = document.createElement('div');
+      moreRow.className = 'step-row';
+      moreRow.style.color = '#888';
+      moreRow.style.fontStyle = 'italic';
+      moreRow.textContent = '... and ' + (fractions.length - maxShow) + ' more words (' + fractions.length + ' total)';
+      stepsEl.appendChild(moreRow);
+    }
+
+    document.getElementById('steps-output').style.display = 'block';
+
+    var size = 300;
+    var canvas = document.getElementById('output-canvas');
+    var ctx = canvas.getContext('2d');
+    canvas.width = size;
+    canvas.height = size;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size, size);
+
+    if (fractions.length >= 2) {
+      ctx.beginPath();
+      ctx.strokeStyle = '#0f3460';
+      ctx.lineWidth = 2;
+      var curX = 0, curY = fractions[0];
+      var start = graphToCanvas(curX, curY, size);
+      ctx.moveTo(start.px, start.py);
+      for (var i = 1; i < fractions.length; i++) {
+        if (i % 2 === 1) { curX = fractions[i]; }
+        else { curY = fractions[i]; }
+        var pt = graphToCanvas(curX, curY, size);
+        ctx.lineTo(pt.px, pt.py);
+      }
+      ctx.stroke();
+    }
+
+    canvas.style.display = 'block';
+    document.getElementById('canvas-placeholder').style.display = 'none';
+    document.getElementById('save-note').style.display = 'block';
+  }
+
+  init();
+</script>
+
+</body>
+</html>
