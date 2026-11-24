@@ -116,6 +116,7 @@
     margin-top: 0.6rem; padding: 0.5rem; background: #f8f9fb;
     border-radius: 6px; border: 1px solid #e0e7ef; font-size: 0.78rem;
     font-family: 'Consolas', monospace; display: none; color: #333;
+    white-space: pre-wrap;
   }
   #image-section { flex: 1; min-width: 0; }
   .canvas-wrapper {
@@ -163,7 +164,7 @@
 <div class="container">
 
   <h1>Poemline</h1>
-  <p class="subtitle">Every text is a drawing waiting to happen. &ensp;|&ensp; <a href="how-it-works.html">How it works</a></p>
+  <p class="subtitle">Every text is a drawing waiting to happen. &ensp;|&ensp; <a href="how-it-works.html">How it works</a> &ensp;|&ensp; <a href="about.html">About</a></p>
 
   <div class="description">
     <p>Type any text and watch it become a unique geometric image. Each letter maps to a number, each word becomes a fraction, and fractions become coordinates for perpendicular strokes on a canvas.</p>
@@ -273,6 +274,7 @@ Nullam varius, turpis et commodo pharetra.</textarea>
   var separationMethod = 'word';
   var dragSrcEl = null;
   var lastFractions = [];
+  var lastMissing = [];
 
   function refreshList() {
     var items = document.querySelectorAll('#key-list li');
@@ -463,10 +465,7 @@ Nullam varius, turpis et commodo pharetra.</textarea>
       if (!caseSensitive) ch = ch.toUpperCase();
       if (!/\s/.test(ch) && !keyMap.hasOwnProperty(ch)) allChars[ch] = true;
     }
-    var missing = Object.keys(allChars);
-    if (missing.length > 0) {
-      alert('These characters are not in your Key and will be ignored: ' + missing.join(' '));
-    }
+    lastMissing = Object.keys(allChars);
 
     var chunks = splitText(text, separationMethod);
     var fractions = [];
@@ -485,7 +484,11 @@ Nullam varius, turpis et commodo pharetra.</textarea>
 
     var debug = document.getElementById('debug-panel');
     debug.style.display = 'block';
-    debug.textContent = 'Generated ' + (fractions.length - 1) + ' strokes from ' + fractions.length + ' segments.';
+    var msg = 'Generated ' + (fractions.length - 1) + ' strokes from ' + fractions.length + ' segments.';
+    if (lastMissing.length > 0) {
+      msg += '\nIgnored characters not in Key: ' + lastMissing.join(' ');
+    }
+    debug.textContent = msg;
   }
 
   function showData() {
